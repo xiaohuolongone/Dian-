@@ -1,0 +1,151 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_GOODS 50
+#define MAX_CHANNELS 5
+
+typedef struct {
+    char type;        // 货物种类
+    int price;        // 货物单价
+    int quantity;     // 货物数量
+} VendingMachine;
+
+VendingMachine vendingMachine[MAX_CHANNELS] = { 0 }; // 初始化所有通道为0
+
+// 函数声明
+void placeGoods();
+void displayGoods();
+void buyGoods();
+void pushHistory(char command, char type, int channel, int price, int quantity);
+
+
+int main() {
+    int choice;
+    do {
+        printf("欢迎使用自动售货机系统\n");
+        printf("1. 摆放货物\n");
+        printf("2. 显示货物\n");
+        printf("3. 购买货物\n");
+        printf("0. 退出\n");
+        printf("请选择操作：");
+        scanf_s("%d", &choice);
+
+
+        switch (choice) {
+        case 1:
+            placeGoods();
+            break;
+        case 2:
+            displayGoods();
+            break;
+        case 3:
+            buyGoods();
+            break;
+        case 0:
+            printf("感谢使用，再见！\n");
+            break;
+        default:
+            printf("无效选项，请重新选择。\n");
+        }
+    } while (choice != 0);
+
+    return 0;
+}
+
+// 摆放货物的函数
+void placeGoods() {
+    char type;
+    int channel, price, quantity;
+
+    printf("请输入货物种类（A-Z）：");
+    scanf_s(" %c", &type);
+    printf("请输入货物所在的通道标号（1-5）：");
+    scanf_s("%d", &channel);
+    printf("请输入货物单价（10元以下整数）：");
+    scanf_s("%d", &price);
+    printf("请输入货物个数（最多50个）：");
+    scanf_s("%d", &quantity);
+
+    if (channel < 1 || channel > MAX_CHANNELS || price < 1 || price >= 10 || quantity < 1 || quantity > MAX_GOODS) {
+        printf("输入有误，请重新输入。\n");
+        return;
+    }
+
+    int index = channel - 1;
+    // 检查通道是否为空或货物类型是否匹配
+    if (vendingMachine[index].type != 0) {
+        if (vendingMachine[index].type != type || vendingMachine[index].price != price) {
+            printf("该通道已有其他种类的货物或价格不匹配，请选择其他通道或核实价格。\n");
+            return;
+        }
+    }
+
+    // 检查货物总数是否会超过50
+    if (vendingMachine[index].quantity + quantity > MAX_GOODS) {
+        printf("货物数量超过限制，无法摆放。\n");
+        return;
+    }
+
+    // 摆放货物
+    vendingMachine[index].type = type;
+    vendingMachine[index].price = price;
+    vendingMachine[index].quantity += quantity;
+    printf("货物摆放成功。\n");
+}
+
+// 显示货物的函数
+void displayGoods() {
+    printf("当前售货机的货物情况如下：\n");
+    for (int i = 0; i < MAX_CHANNELS; i++) {
+        if (vendingMachine[i].type != 0) {
+            printf("通道%d: 货物种类%c, 单价%d元, 剩余数量%d\n", i + 1, vendingMachine[i].type, vendingMachine[i].price, vendingMachine[i].quantity);
+        }
+    }
+}
+
+//购买货物的函数
+void buyGoods() {
+    char type;
+    int channel, quantity, totalCost, insertedCoins = 0, change;
+    printf("请输入货物种类（A-Z）：");
+    scanf_s(" %c", &type);
+    printf("请输入货物所在的通道标号（1-5）：");
+    scanf_s("%d", &channel);
+    printf("请输入购买数量：");
+    scanf_s("%d", &quantity);
+
+    int index = channel - 1;
+    if (vendingMachine[index].type == type && vendingMachine[index].quantity >= quantity) {
+        totalCost = vendingMachine[index].price * quantity;
+        while (insertedCoins < totalCost) {
+            printf("请输入投币金额（1元、2元、5元，输入0结束投币）：");
+            int coin;
+            scanf_s("%d", &coin);
+            if (coin == 0) {
+                printf("投币结束，当前总额：%d元\n", insertedCoins);
+                if (insertedCoins < totalCost) {
+                    printf("余额不足，请继续投币。\n");
+                }
+                else {
+                    break;
+                }
+            }
+            else if (coin == 1 || coin == 2 || coin == 5) {
+                insertedCoins += coin;
+                printf("当前投币总额：%d元\n", insertedCoins);
+            }
+            else {
+                printf("无效的投币金额，请重新输入。\n");
+            }
+        }
+        if (insertedCoins >= totalCost) {
+            vendingMachine[index].quantity -= quantity;
+            change = insertedCoins - totalCost;
+            printf("购买成功！您购买了%d个%c，总价为%d元。找零：%d元\n", quantity, type, totalCost, change);
+        }
+
+    }
+    else {
+        printf("货物种类或通道标号输入有误，或货物不足。\n");
+    }
+}
