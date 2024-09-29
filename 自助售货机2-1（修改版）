@@ -15,7 +15,6 @@ VendingMachine vendingMachine[MAX_CHANNELS] = { 0 }; // 初始化所有通道为
 void placeGoods();
 void displayGoods();
 void buyGoods();
-void pushHistory(char command, char type, int channel, int price, int quantity);
 
 
 int main() {
